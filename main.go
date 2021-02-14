@@ -8,24 +8,36 @@ import (
   "os"
   "bufio"
   "strings"
+  "fmt"
 )
 
-func main() {
-
-  flag.Parse()
-
+func createInterface(id int) *water.Interface {
   config := water.Config{
     DeviceType: water.TUN,
   }
-  config.Name = "IPoCC"
+  config.Name = fmt.Sprint("IPoDC", id)
 
   // setup the tun interface
   ifce, err := water.New(config)
 
   if err != nil {
-    log.Fatal(err)
-    return
+    if (strings.Contains(fmt.Sprint(err), "device or resource busy")){
+      log.Printf(fmt.Sprint(err))
+      return createInterface(id+1)
+    } else {
+      log.Fatal(err)
+      os.Exit(3)
+    }
   }
+
+  return ifce
+}
+
+func main() {
+
+  flag.Parse()
+
+  ifce := createInterface(0)
 
   // just log the interface name
   log.Printf("if: %s\n", ifce.Name())
